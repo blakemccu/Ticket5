@@ -1,0 +1,161 @@
+#include <iostream>
+#include <iterator>
+using namespace std;
+// Community class and functions
+class community {
+    private:
+    vector<string> members;
+    vector<int> posts;
+    public:
+        string communityName;
+        int numMembers;
+        bool joinCommunity(string username);
+        bool makePost(int postInfo);
+        bool leaveCommunity(string username);
+        bool viewMembers();
+        bool viewPosts();
+};
+class user {
+    private:
+        vector<string> userData;
+    public:
+        string username;
+};
+bool community :: joinCommunity(string username) {
+    bool communityJoined = false;
+    members.push_back(username);
+    communityJoined = true;
+    return communityJoined;
+}
+bool community :: makePost(int postInfo) {
+    bool postMade = false;
+    posts.push_back(postInfo);
+    postMade = true;
+    return postMade;
+}
+bool community :: leaveCommunity(string username) {
+    bool leftCommunity = false;
+    vector<string> :: iterator it;
+    for(it = members.begin(); it != members.end(); it++) {
+        if(username == *it) {
+            it = members.erase(it);
+            break;
+        }
+    }
+    leftCommunity = true;
+    return leftCommunity;
+}
+bool community :: viewMembers() {
+    bool membersDisplayed = false;
+    vector<string> :: iterator it;
+    for(it = members.begin(); it != members.end(); it++) {
+        cout << "User: " << *it << endl;
+    }
+
+    membersDisplayed = true;
+    return membersDisplayed;
+}
+bool community :: viewPosts() {
+    bool postsDisplayed = false;
+    vector<int> :: iterator it;
+    for(it = posts.begin(); it != posts.end(); it++) {
+        cout << "Post Data: " << *it << endl;
+    }
+    postsDisplayed = true;
+    return postsDisplayed;
+}
+
+// TEST CASES
+
+bool testJoinCommunity() {
+    community com;
+    string user1, user2, user3;
+    user1 = "bill";
+    user2 = "Joe";
+    user3 = "Jeffery";
+    com.joinCommunity(user1);
+    com.joinCommunity(user2);
+    return com.joinCommunity(user3);
+}
+bool testMakePost() {
+    community com;
+    int post1 = 1;
+    int post2 = 2;
+    int post3 = 3;
+    com.makePost(post1);
+    com.makePost(post2);
+    return com.makePost(post3);
+}
+bool testLeaveCommunity() {
+    community com;
+    string user1, user2, user3;
+    user1 = "bill";
+    user2 = "Joe";
+    user3 = "Jeffery";
+    com.joinCommunity(user1);
+    com.joinCommunity(user2);
+    com.joinCommunity(user3);
+    return com.leaveCommunity(user2);
+}
+bool testViewMembers() {
+    community com;
+    string user1, user2, user3;
+    user1 = "bill";
+    user2 = "Joe";
+    user3 = "Jeffery";
+    com.joinCommunity(user1);
+    com.joinCommunity(user2);
+    com.joinCommunity(user3);
+    return com.viewMembers();
+}
+bool testViewPosts() {
+    community com;
+    int post1 = 1;
+    int post2 = 2;
+    int post3 = 3;
+    com.makePost(post1);
+    com.makePost(post2);
+    com.makePost(post3);
+    return com.viewPosts();
+}
+// Run tests.
+int main() {
+    bool pass = false;
+    // First test
+    pass = testJoinCommunity();
+    if(pass == true) {
+        cout << "joinCommunity passed." << endl;
+    }
+    else {
+        cout << "joinCommunity failed." << endl;
+    }
+    // Second test
+    pass = testMakePost();
+    if(pass == true) {
+        cout << "makePost passed." << endl;
+    }
+    else {
+        cout << "makePost failed." << endl;
+    }
+    pass = testLeaveCommunity();
+    if(pass == true) {
+        cout << "leaveCommunity passed." << endl;
+    }
+    else {
+        cout << "leaveCommunity failed." << endl;
+    }
+    pass = testViewMembers();
+    if(pass == true) {
+        cout << "viewMembers passed." << endl;
+    }
+    else {
+        cout << "viewMembers failed." << endl;
+    }
+    pass = testViewPosts();
+    if(pass == true) {
+        cout << "viewPosts passed." << endl;
+    }
+    else {
+        cout << "viewPosts failed." << endl;
+    }
+}    
