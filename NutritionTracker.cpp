@@ -1,13 +1,13 @@
-#include <gtest/gtest.h>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <limits>
 
-//--------------------------------------------
-// 1) Define NutritionTracker inline
-//--------------------------------------------
+using namespace std;  // allows cin, cout, string, etc. without std::
+
 struct FoodItem {
-    std::string name;
+    string name;
     int calories;
     double protein;
     double carbs;
@@ -16,101 +16,177 @@ struct FoodItem {
 
 class NutritionTracker {
 public:
-    // Return true if the item is valid and was added
-    bool addFood(const FoodItem& food) {
-        // Simple "validity" check: name must not be empty, calories >= 0
+    // Throws runtime_error if the item is invalid
+    void addFood(const FoodItem& food) {
         if (food.name.empty() || food.calories < 0) {
-            return false;
+            throw runtime_error("Invalid food item: name is empty or calories are negative.");
         }
         foodLog.push_back(food);
-        return true;
     }
 
-    // Return true if removed, false otherwise
-    bool removeFood(const std::string& name) {
+    // Throws runtime_error if we don't find the item
+    void removeFood(const string& foodName) {
         for (auto it = foodLog.begin(); it != foodLog.end(); ++it) {
-            if (it->name == name) {
+            if (it->name == foodName) {
                 foodLog.erase(it);
-                return true;
+                return;
             }
         }
-        return false;
+        throw runtime_error("Food item not found: " + foodName);
     }
 
     double totalCalories() const {
         double sum = 0;
-        for (const auto& food : foodLog) {
-            sum += food.calories;
+        for (auto& item : foodLog) {
+            sum += item.calories;
         }
         return sum;
     }
 
 private:
-    std::vector<FoodItem> foodLog;
+    vector<FoodItem> foodLog;
 };
 
-//--------------------------------------------
-// 2) Unit Tests
-//--------------------------------------------
-TEST(NutritionTrackerTest, AddFood_ValidItem) {
+//---------------------------------------------
+// Test 1: AddFood_ValidItem
+//  - We expect no exception => “Passed!”
+//  - If an exception is thrown => “Failed!”
+//---------------------------------------------
+void testAddFoodValid() {
+    cout << "\n--- Test 1: AddFood_ValidItem ---\n"
+         << "(Enter a non-empty name and >= 0 calories to pass.)\n";
+
+    string name;
+    int cal;
+    double protein, carbs, fats;
+
+    cout << "Enter food name: ";
+    getline(cin, name);
+
+    cout << "Enter calories (>= 0): ";
+    cin >> cal;
+
+    cout << "Enter protein, carbs, fats: ";
+    cin >> protein >> carbs >> fats;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Clear leftover
+
     NutritionTracker tracker;
-    FoodItem apple {"Apple", 95, 0.3, 25.0, 0.2};
-    // Expect addFood to succeed
-    EXPECT_TRUE(tracker.addFood(apple));
-    // totalCalories should reflect the new item
-    EXPECT_DOUBLE_EQ(tracker.totalCalories(), 95.0);
-}
-
-TEST(NutritionTrackerTest, AddFood_InvalidItem) {
-    NutritionTracker tracker;
-    FoodItem invalid {"", -5, 0.3, 5.0, 0.1};
-    // Expect addFood to fail
-    EXPECT_FALSE(tracker.addFood(invalid));
-    // totalCalories should remain at 0
-    EXPECT_DOUBLE_EQ(tracker.totalCalories(), 0.0);
-}
-
-TEST(NutritionTrackerTest, RemoveFood_Existing) {
-    NutritionTracker tracker;
-    FoodItem banana {"Banana", 100, 1.3, 27.0, 0.3};
-    tracker.addFood(banana);
-    // Removing "Banana" should succeed
-    EXPECT_TRUE(tracker.removeFood("Banana"));
-    // totalCalories should be 0
-    EXPECT_DOUBLE_EQ(tracker.totalCalories(), 0.0);
-}
-
-TEST(NutritionTrackerTest, RemoveFood_NonExisting) {
-    NutritionTracker tracker;
-    FoodItem yogurt {"Yogurt", 59, 10.0, 3.6, 0.4};
-    tracker.addFood(yogurt);
-    // Removing something that doesn't exist should fail
-    EXPECT_FALSE(tracker.removeFood("Pizza"));
-    // totalCalories should still be 59
-    EXPECT_DOUBLE_EQ(tracker.totalCalories(), 59.0);
-}
-
-//--------------------------------------------
-// 3) main() - Takes Input, Prints Pass/Fail,
-//    Then runs the tests
-//--------------------------------------------
-int main(int argc, char** argv) {
-    // PART A: Simple input check that prints "Passed!" or "Failed!"
-    std::cout << "Enter a food name: ";
-    std::string userInput;
-    std::cin >> userInput;
-
-    // Create tracker and a simple test FoodItem
-    NutritionTracker tracker;
-    FoodItem userFood {userInput, 100, 5.0, 10.0, 2.0};
-
-    if (tracker.addFood(userFood)) {
-        std::cout << "Passed!" << std::endl;
-    } else {
-        std::cout << "Failed!" << std::endl;
+    try {
+        FoodItem item { name, cal, protein, carbs, fats };
+        tracker.addFood(item);
+        // If we get here, no exception
+        cout << "Passed! (No exception thrown, item accepted)\n";
+    } catch (const exception& e) {
+        cout << "Failed! (Exception thrown: " << e.what() << ")\n";
     }
+}
 
-    // PART B: Run all Google Tests
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+//---------------------------------------------
+// Test 2: AddFood_InvalidItem
+//  - We expect an exception => “Passed!”
+//  - If no exception => “Failed!”
+//---------------------------------------------
+void testAddFoodInvalid() {
+    cout << "\n--- Test 2: AddFood_InvalidItem ---\n"
+         << "(Enter an empty name OR negative calories to pass.)\n";
+
+    string name;
+    int cal;
+    double protein, carbs, fats;
+
+    cout << "Enter food name: ";
+    getline(cin, name);
+
+    cout << "Enter calories: ";
+    cin >> cal;
+
+    cout << "Enter protein, carbs, fats: ";
+    cin >> protein >> carbs >> fats;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    NutritionTracker tracker;
+    try {
+        FoodItem item { name, cal, protein, carbs, fats };
+        tracker.addFood(item);
+        // No exception => Fail
+        cout << "Failed! (No exception thrown but we expected one.)\n";
+    } catch (const exception& e) {
+        cout << "Passed! (Exception thrown: " << e.what() << ")\n";
+    }
+}
+
+//---------------------------------------------
+// Test 3: RemoveFood_Existing
+//  - We add “Banana” to the tracker
+//  - If the user enters “Banana” => no exception => “Passed!”
+//  - Otherwise => “Failed!”
+//---------------------------------------------
+void testRemoveFoodExisting() {
+    cout << "\n--- Test 3: RemoveFood_Existing ---\n"
+         << "We have added 'Banana' (100 cal) to the tracker.\n"
+         << "(Enter 'Banana' to pass, anything else => fails)\n";
+
+    NutritionTracker tracker;
+    FoodItem banana { "Banana", 100, 1.3, 27.0, 0.3 };
+    tracker.addFood(banana);
+
+    string foodToRemove;
+    cout << "Enter the item name to remove: ";
+    getline(cin, foodToRemove);
+
+    try {
+        tracker.removeFood(foodToRemove);
+        // No exception => success
+        cout << "Passed! (No exception thrown, item removed.)\n";
+    } catch (const exception& e) {
+        cout << "Failed! (Exception thrown: " << e.what() << ")\n";
+    }
+}
+
+//---------------------------------------------
+// Test 4: RemoveFood_NonExisting
+//  - We add “Yogurt” (59 cal) to the tracker
+//  - If user enters something else => throws => “Passed!”
+//  - If user enters “Yogurt” => no throw => “Failed!”
+//---------------------------------------------
+void testRemoveFoodNonExisting() {
+    cout << "\n--- Test 4: RemoveFood_NonExisting ---\n"
+         << "We have added 'Yogurt' (59 cal) to the tracker.\n"
+         << "(Enter something else => pass, 'Yogurt' => fail)\n";
+
+    NutritionTracker tracker;
+    FoodItem yogurt { "Yogurt", 59, 10.0, 3.6, 0.4 };
+    tracker.addFood(yogurt);
+
+    string foodToRemove;
+    cout << "Enter the item name to remove: ";
+    getline(cin, foodToRemove);
+
+    try {
+        tracker.removeFood(foodToRemove);
+        // If no exception, that’s a fail for this test
+        cout << "Failed! (No exception thrown but we expected one.)\n";
+    } catch (const exception& e) {
+        // Threw => pass
+        cout << "Passed! (Exception thrown: " << e.what() << ")\n";
+    }
+}
+
+//---------------------------------------------
+// Main: run all the tests in sequence
+//---------------------------------------------
+int main() {
+    cout << "Welcome to the simple try/catch NutritionTracker tests!\n";
+    cout << "We’ll run 4 tests in sequence.\n"
+         << "Follow the prompts carefully.\n";
+
+    testAddFoodValid();
+    testAddFoodInvalid();
+    testRemoveFoodExisting();
+    testRemoveFoodNonExisting();
+
+    cout << "\nAll tests completed!\n";
+    return 0;
 }
